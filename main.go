@@ -37,6 +37,7 @@ func main() {
 	r.HandleFunc("/api/harvests", api.GetHarvests).Methods("GET")
 	r.HandleFunc("/api/harvests/averages", api.GetHarvestSoilAverages).Methods("GET")
 	r.HandleFunc("/api/news", api.GetEconomicNews).Methods("GET")
+	r.HandleFunc("/api/cpo-price", api.GetCPOPrice).Methods("GET")
 	r.HandleFunc("/api/auth/login", api.Login).Methods("POST")
 	r.HandleFunc("/api/auth/status", api.CheckAuth).Methods("GET", "OPTIONS")
 
