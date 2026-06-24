@@ -92,6 +92,16 @@ func onMessageReceived(client mqtt.Client, message mqtt.Message) {
 		
 		// Notify frontend about new unregistered node
 		ws.BroadcastNotification("new unregistered nodes detected")
+	} else {
+		// Existing node: Update coordinates if they are present in the payload and changed
+		if payload.Latitude != 0 && payload.Longitude != 0 && (node.Latitude != payload.Latitude || node.Longitude != payload.Longitude) {
+			node.Latitude = payload.Latitude
+			node.Longitude = payload.Longitude
+			database.DB.Save(&node)
+			
+			// Broadcast notification that nodes list has updated coordinates
+			ws.BroadcastNotification("node location updated")
+		}
 	}
 
 	// 2. Save reading
