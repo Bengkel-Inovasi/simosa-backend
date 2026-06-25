@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 	"website/backend/internal/database"
 	"website/backend/internal/models"
 
@@ -74,24 +75,40 @@ func GetHarvests(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetHarvestSoilAverages(w http.ResponseWriter, r *http.Request) {
-	// Implementation for calculating average soil data between harvests
-	// This would take two dates and average the sensor_readings in that range
-	// For brevity, I'll implement a basic version
-	start := r.URL.Query().Get("start")
-	end := r.URL.Query().Get("end")
+	startStr := r.URL.Query().Get("start")
+	endStr := r.URL.Query().Get("end")
+
+	var startTime, endTime time.Time
+	var err error
+
+	startTime, err = time.Parse(time.RFC3339, startStr)
+	if err != nil {
+		startTime, err = time.Parse("2006-01-02 15:04:05", startStr)
+		if err != nil {
+			startTime = time.Unix(0, 0)
+		}
+	}
+
+	endTime, err = time.Parse(time.RFC3339, endStr)
+	if err != nil {
+		endTime, err = time.Parse("2006-01-02 15:04:05", endStr)
+		if err != nil {
+			endTime = time.Now()
+		}
+	}
 
 	var result struct {
-		AvgPH          float64 `json:"avg_ph"`
-		AvgN           float64 `json:"avg_n"`
-		AvgP           float64 `json:"avg_p"`
-		AvgK           float64 `json:"avg_k"`
-		AvgMoisture    float64 `json:"avg_moisture"`
-		AvgTemperature float64 `json:"avg_temperature"`
+		AvgPH          *float64 `json:"avg_ph"`
+		AvgN           *float64 `json:"avg_n"`
+		AvgP           *float64 `json:"avg_p"`
+		AvgK           *float64 `json:"avg_k"`
+		AvgMoisture    *float64 `json:"avg_moisture"`
+		AvgTemperature *float64 `json:"avg_temperature"`
 	}
 
 	database.DB.Model(&models.SensorReading{}).
 		Select("AVG(ph) as avg_ph, AVG(n) as avg_n, AVG(p) as avg_p, AVG(k) as avg_k, AVG(moisture) as avg_moisture, AVG(temperature) as avg_temperature").
-		Where("timestamp BETWEEN ? AND ?", start, end).
+		Where("timestamp BETWEEN ? AND ?", startTime, endTime).
 		Scan(&result)
 
 	w.Header().Set("Content-Type", "application/json")
